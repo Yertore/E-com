@@ -1,0 +1,9 @@
+go 1.22.2
+
+use (
+	./catalog-service
+	./notification-service
+	./order-service
+	./payment-service
+	./pkg
+)

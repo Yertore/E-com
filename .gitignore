@@ -1,0 +1,27 @@
+# Binaries
+/bin/
+*.exe
+catalog-server
+order-server
+payment-server
+notification-server
+
+# Go workspace local state (keep go.work, ignore go.work.sum if generated locally)
+go.work.sum
+
+# Env files
+.env
+.env.local
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+
+# Build artifacts
+/dist/
