@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # ─── POSTGRES ────────────────────────────────────────────────
   postgres-catalog:
     image: postgres:16-alpine
     environment:
@@ -8,9 +9,14 @@ services:
       POSTGRES_USER: catalog
       POSTGRES_PASSWORD: catalog
     ports:
-      - "5433:5432"
+      - "6433:5432"
     volumes:
       - pg_catalog_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalog -d catalog"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   postgres-order:
     image: postgres:16-alpine
@@ -19,9 +25,14 @@ services:
       POSTGRES_USER: orders
       POSTGRES_PASSWORD: orders
     ports:
-      - "5434:5432"
+      - "6434:5432"
     volumes:
       - pg_order_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U orders -d orders"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   postgres-payment:
     image: postgres:16-alpine
@@ -30,15 +41,59 @@ services:
       POSTGRES_USER: payment
       POSTGRES_PASSWORD: payment
     ports:
-      - "5435:5432"
+      - "6435:5432"
     volumes:
       - pg_payment_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payment -d payment"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
+  # ─── MIGRATIONS ──────────────────────────────────────────────
+  migrate-catalog:
+    image: migrate/migrate:v4.17.0
+    volumes:
+      - ./catalog-service/migrations:/migrations
+    command: >
+      -path=/migrations
+      -database "postgres://catalog:catalog@postgres-catalog:5432/catalog?sslmode=disable"
+      up
+    depends_on:
+      postgres-catalog:
+        condition: service_healthy
+
+  migrate-order:
+    image: migrate/migrate:v4.17.0
+    volumes:
+      - ./order-service/migrations:/migrations
+    command: >
+      -path=/migrations
+      -database "postgres://orders:orders@postgres-order:5432/orders?sslmode=disable"
+      up
+    depends_on:
+      postgres-order:
+        condition: service_healthy
+
+  migrate-payment:
+    image: migrate/migrate:v4.17.0
+    volumes:
+      - ./payment-service/migrations:/migrations
+    command: >
+      -path=/migrations
+      -database "postgres://payment:payment@postgres-payment:5432/payment?sslmode=disable"
+      up
+    depends_on:
+      postgres-payment:
+        condition: service_healthy
+
+  # ─── REDIS ───────────────────────────────────────────────────
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
 
+  # ─── KAFKA ───────────────────────────────────────────────────
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.0
     environment:

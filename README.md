@@ -35,13 +35,31 @@ Outbox · CQRS (Order read-модель)
 
 ## Быстрый старт
 
-```bash
+​```bash
 git clone https://github.com/yertore/e-com.git
 cd e-com
-docker compose up -d        # поднимает Postgres, Kafka, Redis
-make run-catalog             # запускает catalog-service локально
+docker compose up --build     # поднимает инфраструктуру, применяет миграции, запускает сервисы
 curl http://localhost:8081/healthz
-```
+​```
+
+## Запуск
+
+### Все сразу:
+​```bash
+docker compose up --build
+​```
+
+### Только инфраструктура + миграции (без сервисов):
+​```bash
+docker compose up -d postgres-catalog migrate-catalog
+docker compose up -d postgres-order migrate-order
+docker compose up -d postgres-payment migrate-payment
+​```
+
+### Остановка:
+​```bash
+docker compose down -v
+​```
 
 ## Структура репозитория
 
@@ -59,9 +77,10 @@ E-com/
 
 ## Roadmap
 
-- [x] Этап 1: каркас monorepo, Catalog Service skeleton
-- [ ] Этап 2: Order Service + Saga + Outbox + Kafka
-- [ ] Этап 3: Redis, конкурентные резервы остатков (MVCC)
-- [ ] Этап 4: CQRS на Order Service
-- [ ] Этап 5: Observability (Prometheus/Grafana/Loki/Jaeger)
-- [ ] Этап 6: Kubernetes + cloud деплой
+- [x] Этап 1: monorepo skeleton, Catalog Service healthz, Postgres схема + миграции
+- [ ] Этап 2: Catalog domain layer (CRUD) + clean architecture + тесты
+- [ ] Этап 3: Order Service + Saga + Outbox + Kafka
+- [ ] Этап 4: Redis, конкурентные резервы остатков (optimistic locking/MVCC)
+- [ ] Этап 5: CQRS на Order Service
+- [ ] Этап 6: Observability (Prometheus/Grafana/Loki/Jaeger)
+- [ ] Этап 7: Kubernetes + cloud деплой
